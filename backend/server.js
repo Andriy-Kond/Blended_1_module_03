@@ -1,6 +1,8 @@
+const asyncHandler = require('express-async-handler');
 const { config } = require('dotenv');
 const express = require('express');
 require('colors');
+
 const path = require('path');
 
 // Затягуємо сюди middleware errorHandler.js
@@ -11,6 +13,9 @@ const connectDB = require('../config/connectDB'); // затягуємо ф-ю п
 const configPath = path.join(__dirname, '..', 'config', '.env');
 
 require('dotenv').config({ path: configPath });
+
+const UserModel = require('./models/usersModel.js');
+
 // console.log(require('dotenv').config({ path: configPath }));
 //  {
 //   parsed: {
@@ -83,3 +88,38 @@ app.listen(PORT, () =>
 // 2. Joi - в роутах. Перевіряє відповідність символам, знаки email, довжину, символи, паролі, типи даних і т.п.
 // 3. Контролерна валідація (if...). Це основна валідація. Дивиться чи є поля і багато всього.
 // 4. Валідація на рівні БД - в mongoose-моделі(схемі). До цієї валідації не має доходити. Якщо дійшло, значить погані попередні.
+
+// Реєстрація користувача - це створення користувача у БД
+
+app.post(
+  '/register',
+  asyncHandler(async (req, res) => {
+    // console.log('asyncHandler >> req:', req.body);
+
+    const { email, password } = req.body;
+
+    // Валідації:
+    // 1. Отримання та валідація даних (контролерна валідація)
+    if (!email || !password) {
+      res.status(400);
+      throw new Error('Provide all required fields');
+    }
+
+    // 2. Шукаємо користувача у БД по email.
+    const candidate = await UsersModel.findOne({ email });
+    // 2.1. Якщо знайшли, то викидаємо повідомлення, що такий користувач вже є.
+
+    if (!email || !password) {
+      res.status(400);
+      throw new Error('Provide all required fields');
+    }
+
+    // 2.2. Якщо не знайшли, то хешируємо пароль і зберігаємо у БД.
+  })
+);
+
+// Аутентифікація - перевірка даних, які передав нам користувач і порівняння з даними у БД (login і password, відбиток пальця, сітківка ока)
+
+// Авторизація - Перевірка прав доступу до ресурсів БД
+
+// Logout - вихід з системи, втрата прав доступу до всього ресурсу.
